@@ -7,10 +7,10 @@ import os
 # ===========================================================================
 
 # pd.read_csv() reads a CSV file and turns it into a DataFrame object
-event_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-EventData.csv")
-specimen_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-SpecimenData.csv")
-dna_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-DNAextractions.csv")
-library_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-GenomicLibraries.csv")
+event_df = pd.read_csv("Panama2021-Main-Dataset/Panama2021-EventData.csv")
+specimen_df = pd.read_csv("Panama2021-Main-Dataset/Panama2021-SpecimenData.csv")
+dna_df = pd.read_csv("Panama2021-Main-Dataset/Panama2021-DNAextractions.csv")
+library_df = pd.read_csv("Panama2021-Main-Dataset/Panama2021-GenomicLibraries.csv")
 
 
 # Inspect/Verify data by getting rows and column counts (If they don't match you know something messed up)
@@ -81,19 +81,19 @@ specimen_clean = specimen_df.rename(
         "sufix": "suffix",  # Spelling
         "event_code": "event_code",  # FOREIGN KEY (EventData)
         "species": "species",
-        "genus": "genus",
-        "epithet": "epithet",
-        "clade": "clade",
-        "family": "family",
-        "development": "development",
+        "genus": "genus", 
+        "epithet": "epithet", #remove
+        "clade": "clade",#remove
+        "family": "family", #remove
+        "development": "development", #keep but ask about/add to La Palma
         "habitat": "habitat",
-        "fixation_method": "fixation_method",
+        "fixation_method": "fixation_method", #add ethanol 95% in panama
         "specimens": "specimen_count",  # More descriptive
-        "parts": "parts",
-        "vial": "vial",
-        "operculum": "operculum",
+        "parts": "parts", #keep but ask about/add to La Palma
+        "vial": "vial", #remove
+        "operculum": "operculum", #remove
         "notes": "specimen_notes",  # Renamed
-        "photos_org": "photos_org",
+        "photos_org": "photos_org", #remove
         "identification_by": "identification_by",
         "Voucher": "voucher",  # lowercase
         "SecondVoucherClip": "second_voucher_clip",
@@ -111,26 +111,26 @@ dna_clean = dna_df.rename(
     columns={
         "extraction_id": "extraction_id",  # PRIMARY KEY
         "lot_id": "lot_id",  # FOREIGN KEY (SpecimenData)
-        "species": "species",
-        "plate_id": "plate_id",
-        "plate_well": "plate_well",
+        "species": "species", #remove
+        "plate_id": "plate_id", #remove, maybe ask?
+        "plate_well": "plate_well", #remove, maybe ask?
         "extraction_date": "extraction_date",
         "extraction_kit": "extraction_kit",
         "elution_ul": "elution_ul",
         "Qubit_DNA_[ng/ul]": "qubit_dna_ng_ul",  # Removed brackets and slashes
-        "Nanodrop_[ng/ul]": "nanodrop_ng_ul",
-        "Nanodrop_260/280": "nanodrop_260_280",
-        "Nanodrop_260/230": "nanodrop_260_230",
-        "Qubit : Nanodrop": "qubit_nanodrop_ratio",
-        "clip_over": "clip_over",
-        "contamination_plate": "contamination_plate",
-        "contamination_wells": "contamination_wells",
+        "Nanodrop_[ng/ul]": "nanodrop_ng_ul", #create dummy in La Palma
+        "Nanodrop_260/280": "nanodrop_260_280", #create dummy in La Palma
+        "Nanodrop_260/230": "nanodrop_260_230", #create dummy in La Palma
+        "Qubit : Nanodrop": "qubit_nanodrop_ratio", #create dummy in La Palma
+        "clip_over": "clip_over", #create dummy in La Palma
+        "contamination_plate": "contamination_plate", #create dummy in La Palma
+        "contamination_wells": "contamination_wells",#create dummy in La Palma
         "extraction_notes": "extraction_notes",
         "piece_size": "piece_size",
-        "Qubit_after_SpeedVac": "qubit_after_speedvac",
+        "Qubit_after_SpeedVac": "qubit_after_speedvac", #create dummy in La Palma
     }
 )
-
+### add empty columns for BLAST info to Panama
 library_clean = library_df.rename(
     columns={
         "library_id": "library_id",  # PRIMARY KEY
