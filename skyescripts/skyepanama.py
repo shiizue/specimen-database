@@ -2,12 +2,18 @@ import sqlite3
 import pandas as pd
 import os
 
+# ===========================================================================
+# LOADING CSVs WITH PANDAS
+# ===========================================================================
 
+# pd.read_csv() reads a CSV file and turns it into a DataFrame object
 event_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-EventData.csv")
 specimen_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-SpecimenData.csv")
 dna_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-DNAextractions.csv")
 library_df = pd.read_csv("Panama2021-Main-Dataset\\Panama2021-GenomicLibraries.csv")
 
+
+# Inspect/Verify data by getting rows and column counts (If they don't match you know something messed up)
 print(f"\nEvent Data:        {event_df.shape[0]} rows, {event_df.shape[1]} columns")
 print(f"Specimen Data:     {specimen_df.shape[0]} rows, {specimen_df.shape[1]} columns")
 print(f"DNA Extractions:   {dna_df.shape[0]} rows, {dna_df.shape[1]} columns")
@@ -25,13 +31,13 @@ print(list(dna_df.columns))
 print("\n--- Genomic Library column names ---")
 print(list(library_df.columns))
 
-#################################################
-### DATA CLEANING
-#################################################
+# ===========================================================================
+# DATA CLEANING
+# ===========================================================================
 
 # Renaming columns to be more consistent and descriptive
-# rename() takes a dictionary mapping old names -> new names.
-
+# rename() takes a dictionary mapping key(old names) to value(new names)
+# This also doesn't modify the original DF (we're saving to a new one)
 event_clean = event_df.rename(
     columns={
         "trip_id": "trip_id",
@@ -48,7 +54,7 @@ event_clean = event_df.rename(
         "low_tide": "low_tide",
         "collecting_method": "collecting_method",
         "depth": "depth",
-        "population": "population",
+        "population": "population",  # this will get removed
         "locality": "locality",
         "locality_details": "locality_details",
         "city_district": "city_district",
@@ -57,13 +63,15 @@ event_clean = event_df.rename(
         "photos_env": "photos_env",
         "country": "country",
         "collector": "collector",
-        "notes": "event_notes",  # Renamed
-        "use_in_map": "use_in_map",
+        "notes": "event_notes",  # Renamed - all the datasets have a notes column so need to rename to avoid confusion (disambiguation)
+        "use_in_map": "use_in_map",  # this will get removed
     }
 )
 
 # remove use_in_map column and population column
-# The ~ means "not" — so we keep all columns that do NOT start with "Unnamed"
+# .loc[] in pandas drops columns
+# The ~ means "not" so we keep all columns that do NOT start with "Unnamed"
+# pandas is doing some stuff with making a boolean array for all columns
 event_clean = event_clean.loc[:, ~event_clean.columns.str.startswith("use_in_map")]
 event_clean = event_clean.loc[:, ~event_clean.columns.str.startswith("population")]
 
@@ -92,7 +100,7 @@ specimen_clean = specimen_df.rename(
     }
 )
 
-# Remove unnamed last column
+# Remove unnamed last columns
 # keep all columns that do NOT start with "Unnamed"
 specimen_clean = specimen_clean.loc[
     :, ~specimen_clean.columns.str.startswith("Unnamed")
@@ -158,11 +166,12 @@ print(f"\nCleaned DNA columns: {list(dna_clean.columns)}")
 print(f"\nCleaned Genomic Library columns: {list(library_clean.columns)}")
 
 
-#################################################
-### CREATING SQLITE DATABASE
-#################################################
+# ===========================================================================
+# CREATING THE SQLITE DATABASE
+# ===========================================================================
 
-# sqlite3.connect() creates a new .db file (or opens it if it exists)
+
+# sqlite3.connect() creates a new .db file (or opens it if it exists) at the given path
 # The "connection" (conn) is your link to the database file
 # The "cursor" (cur) is the object you use to send SQL commands
 
@@ -178,9 +187,16 @@ cur = conn.cursor()
 print(f"Database created at: {db_path}")
 
 # SQLite has foreign key enforcement off by default
+# must be run every time you open a connection because it doesn't persist in the file itself
 cur.execute("PRAGMA foreign_keys = ON;")
 
 # CREATE TABLE: EventData
+# This is actually defining the schema for a table
+# IF NOT EXISTS prevents an error (os.remove() pretty much handles this already though)
+# Column name - Data Type
+
+# PRIMARY KEY means this column is the unique identifier for every row
+# it also means it is the target for FOREIGN KEY references from other tables
 cur.execute(
     """
 CREATE TABLE IF NOT EXISTS EventData (
@@ -214,6 +230,9 @@ CREATE TABLE IF NOT EXISTS EventData (
 )
 
 # CREATE TABLE: SpecimenData
+# FOREIGN KEY - event_code column in the SpecimenData table must always reference a value that also exists in the event_code column in EventData
+# So, can't add a specimen with an invalid/missing event code
+# and can't delete an event that still has specimens associated with it
 cur.execute(
     """
 CREATE TABLE IF NOT EXISTS SpecimenData (
@@ -303,40 +322,45 @@ CREATE TABLE IF NOT EXISTS GenomicLibraries (
 """
 )
 
-conn.commit()
-print("All four tables created successfully.")
+conn.commit()  # Permanently writes these to the file
+print("All four tables created successfully!")
 
-#################################################
-### LOADING DATA INTO DATABASE
-#################################################
+# ===========================================================================
+# LOADING DATA INTO DATABASE
+# ===========================================================================
 
 """
 pandas - to_sql() writes a DataFrame directly to a SQL table
 
 Parameters:
-    name: the name of the table in the database
+    name: the name of the target table in the database
     con:the database connection
-    if_exists: 'append' adds to existing table; 'replace' would overwrite it
-    index: False means don't write the pandas row index as a column
+    if_exists: 'append' adds these rows to existing table ()'replace' would overwrite it)
+    index: False means don't write the pandas internal row-numbering index as an extra column
 """
-
+# Load Data: EventData
 event_clean.to_sql("EventData", conn, if_exists="append", index=False)
 print(f"Loaded {len(event_clean)} rows into EventData")
 
 # If a specimen references an event code that doesnt exist yet, it causes an error when loading
 # Remove those rows and deal with them later
 
-valid_event_codes = set(event_clean["event_code"])
-orphan_specimens = specimen_clean[~specimen_clean["event_code"].isin(valid_event_codes)]
-valid_specimens = specimen_clean[specimen_clean["event_code"].isin(valid_event_codes)]
-
+valid_event_codes = set(
+    event_clean["event_code"]
+)  # Create a set of all successfully-loaded event codes
+orphan_specimens = specimen_clean[
+    ~specimen_clean["event_code"].isin(valid_event_codes)
+]  # return True for each specimen row whose event_code DOES NOT exist in the valid codes set (find orphans)
+valid_specimens = specimen_clean[
+    specimen_clean["event_code"].isin(valid_event_codes)
+]  # Opposite of previous line; these are rows actually safe to load without error
 if len(orphan_specimens) > 0:
     print(
-        f"\n  NOTE: {len(orphan_specimens)} specimen row(s) reference unknown event codes "
-        f"and were skipped: {orphan_specimens['event_code'].unique().tolist()}"
+        f"\n  NOTE: {len(orphan_specimens)} specimen row(s) reference unknown event codes and were skipped: {orphan_specimens['event_code'].unique().tolist()}. Saving to orphan_specimens.csv for review."
     )
     orphan_specimens.to_csv("skyescripts\\orphan_specimens.csv", index=False)
 
+# Now we can actually load the "cleared" rows
 valid_specimens.to_sql("SpecimenData", conn, if_exists="append", index=False)
 print(f"Loaded {len(valid_specimens)} rows into SpecimenData")
 
@@ -348,157 +372,3 @@ print(f"Loaded {len(library_clean)} rows into GenomicLibraries")
 
 conn.commit()
 print("\nAll data loaded successfully!")
-
-#################################################
-### EXAMPLE QUERIES
-#################################################
-
-
-"""
-SQL query structure:
-
-SELECT [columns you want]
-FROM   [table name]
-WHERE  [filter condition]      <- optional
-JOIN   [other table] ON [...]  <- optional, links tables together
-ORDER BY [column] ASC/DESC     <- optional, sorts results
-LIMIT  [number]                <- optional, caps number of results
-
-The asterisk (*) in SELECT means "all columns"
-"""
-# ---- Query 1: List all collection events with locations and dates ----
-
-cur.execute(
-    """
-    SELECT event_code, date, locality, latitude, longitude, environment
-    FROM EventData
-    ORDER BY date ASC;
-"""
-)
-rows = cur.fetchall()
-for row in rows[:5]:  # Print first 5
-    print(row)
-print(f"  ... ({len(rows)} total events)")
-
-
-# ---- Query 2: Find all specimens of a specific species ----
-cur.execute(
-    """
-    SELECT lot_id, species, event_code, voucher
-    FROM SpecimenData
-    WHERE species = 'Fissurella virescens';
-"""
-)
-rows = cur.fetchall()
-for row in rows:
-    print(row)
-print(f"  ({len(rows)} specimens found)")
-
-
-# ---- Query 3: Find specimens from a specific family ----
-print("\n--- Query 3: All specimens from family Fissurellidae ---")
-cur.execute(
-    """
-    SELECT lot_id, species, genus, event_code
-    FROM SpecimenData
-    WHERE family = 'Fissurellidae'
-    ORDER BY genus;
-"""
-)
-rows = cur.fetchall()
-for row in rows[:5]:
-    print(row)
-print(f"  ... ({len(rows)} total Fissurellidae specimens)")
-
-
-# ---- Query 4: JOIN two tables (combine specimen and event information)
-cur.execute(
-    """
-    SELECT s.lot_id, s.species, e.locality, e.latitude, e.longitude, e.date
-    FROM SpecimenData AS s
-    JOIN EventData AS e ON s.event_code = e.event_code
-    LIMIT 5;
-"""
-)
-rows = cur.fetchall()
-for row in rows:
-    print(row)
-
-
-# ---- Query 5: Specimens with associated DNA extractions ----
-cur.execute(
-    """
-    SELECT d.extraction_id, d.lot_id, d.species, d.extraction_date, d.qubit_dna_ng_ul
-    FROM DNAExtractions AS d
-    ORDER BY d.extraction_date
-    LIMIT 5;
-"""
-)
-rows = cur.fetchall()
-for row in rows:
-    print(row)
-total = cur.execute("SELECT COUNT(*) FROM DNAExtractions").fetchone()[0]
-print(f"  ({total} total extractions in database)")
-
-
-# ---- Query 6: JOIN specimen, event, and extraction (three tables)----
-cur.execute(
-    """
-    SELECT 
-        s.lot_id,
-        s.species,
-        e.locality,
-        e.date AS collection_date,
-        d.extraction_id,
-        d.qubit_dna_ng_ul AS dna_concentration
-    FROM SpecimenData AS s
-    JOIN EventData AS e ON s.event_code = e.event_code
-    JOIN DNAExtractions AS d ON s.lot_id = d.lot_id
-    ORDER BY d.qubit_dna_ng_ul DESC
-    LIMIT 8;
-"""
-)
-rows = cur.fetchall()
-print(
-    f"{'Lot ID':<20} {'Species':<30} {'Locality':<15} {'Date':<15} {'Extraction':<12} {'DNA (ng/ul)':>12}"
-)
-print("-" * 105)
-for row in rows:
-    print(
-        f"{str(row[0]):<20} {str(row[1]):<30} {str(row[2]):<15} {str(row[3]):<15} {str(row[4]):<12} {str(row[5]):>12}"
-    )
-
-
-# ---- Query 7: Count specimens per species (aggregate query) ----
-cur.execute(
-    """
-    SELECT species, COUNT(*) AS specimen_count
-    FROM SpecimenData
-    GROUP BY species
-    ORDER BY specimen_count DESC
-    LIMIT 10;
-"""
-)
-rows = cur.fetchall()
-for row in rows:
-    print(f"  {row[0]:<40} {row[1]} specimens")
-
-
-# ---- Query 8: Specimens with voucher numbers----
-cur.execute(
-    """
-    SELECT lot_id, species, voucher
-    FROM SpecimenData
-    WHERE voucher LIKE 'USNM%'
-    ORDER BY voucher;
-"""
-)
-rows = cur.fetchall()
-for row in rows[:8]:
-    print(row)
-usnm_count = len(
-    cur.execute("SELECT lot_id FROM SpecimenData WHERE voucher LIKE 'USNM%'").fetchall()
-)
-print(f"  ... ({usnm_count} total USNM vouchers)")
-
-conn.close()
