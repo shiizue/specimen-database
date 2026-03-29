@@ -141,7 +141,7 @@ specimen_clean = specimen_clean.loc[
     :, ~specimen_clean.columns.str.startswith("photos_org")
 ]
 specimen_clean = specimen_clean.loc[
-    :, ~specimen_clean.columns.str.startswith("PhotosUnderwater")
+    :, ~specimen_clean.columns.str.startswith("photos_underwater")
 ]
 
 print("\n --- Cleaned SpecimenData Columns ---")
@@ -219,6 +219,12 @@ dna_clean = pd.merge(
     how="left",
 )
 
+#Flag any DNAExtractioons rows that couldn't be connected back to SpecimenData via lot_id (NaN after merge)
+unmatched_dna = dna_clean[dna_clean["lot_id"].isna()]
+if not unmatched_dna.empty:
+    print(f"NOTE: {len(unmatched_dna)} DNA rows could not be matched to a specimen via lot_ids")
+    print(unmatched_dna[["extraction_id", "Voucher"]].to_string())
+    
 # We can drop these columns since now they are redundant
 dna_clean = dna_clean.drop(columns=["Voucher", "voucher"])
 
@@ -232,7 +238,7 @@ print(list(dna_clean.columns))
 # already created. Do NOT use os.remove() here — that would delete Panama data.
 # Run clean_load_panama.py first, then run this script.
 
-db_path = "panama_scripts/panama_specimens.db"
+db_path = "skyescripts\\panama_specimens.db"
 
 conn = sqlite3.connect(db_path)
 cur = conn.cursor()
@@ -251,6 +257,8 @@ def add_missing_column(cursor, table, column, col_type):
     except sqlite3.OperationalError:
         pass
 
+add_missing_column(cur, "EventData", "locality_details", "TEXT")
+add_missing_column(cur, "EventData", "city_district", "TEXT")
 
 add_missing_column(cur, "SpecimenData", "dna_extracted", "TEXT")
 add_missing_column(cur, "SpecimenData", "phylum", "TEXT")
