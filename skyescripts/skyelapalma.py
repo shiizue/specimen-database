@@ -219,12 +219,14 @@ dna_clean = pd.merge(
     how="left",
 )
 
-#Flag any DNAExtractioons rows that couldn't be connected back to SpecimenData via lot_id (NaN after merge)
+# Flag any DNAExtractioons rows that couldn't be connected back to SpecimenData via lot_id (NaN after merge)
 unmatched_dna = dna_clean[dna_clean["lot_id"].isna()]
 if not unmatched_dna.empty:
-    print(f"NOTE: {len(unmatched_dna)} DNA rows could not be matched to a specimen via lot_ids")
+    print(
+        f"NOTE: {len(unmatched_dna)} DNA rows could not be matched to a specimen via lot_ids"
+    )
     print(unmatched_dna[["extraction_id", "Voucher"]].to_string())
-    
+
 # We can drop these columns since now they are redundant
 dna_clean = dna_clean.drop(columns=["Voucher", "voucher"])
 
@@ -256,6 +258,7 @@ def add_missing_column(cursor, table, column, col_type):
     # throws an error if column already exists, so it'll be skipped
     except sqlite3.OperationalError:
         pass
+
 
 add_missing_column(cur, "EventData", "locality_details", "TEXT")
 add_missing_column(cur, "EventData", "city_district", "TEXT")
