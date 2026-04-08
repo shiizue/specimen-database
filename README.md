@@ -48,7 +48,36 @@ A basic SQL query uses SELECT, FROM, JOIN and WHERE statements to filter data an
 * **JOIN alt_table on table.common_col = alt_table.common_col**: joins tables along a common identifier for accessing information in a different table.
 * **WHERE column_name \<condition\>**: filters rows by if a value in the named column fits a particular condition. These statements can use any logical operator, including inequalities, AND, OR, NOT, BETWEEN and IS NULL. 
 
-**Example Queries**
+**Running Queries**
+To ensure the database is working properly, we have included 2 example queries to run and check with correct output. These queries can be ran through the VSQLite Explorer query editor function, or through the test_query1.py and test_query2.py scripts in the database-scripts directory.
 
+Test Query 1:
+
+    SELECT species, COUNT(*) AS specimen_count
+    FROM SpecimenData
+    GROUP BY species
+    ORDER BY specimen_count DESC
+    LIMIT 10
+
+To run the Python script:
+
+    python3 database-scripts/test_query1.py
+
+This query counts the number of specimens for each sample and returns the top 10 species and their counts. The correct output for running this query is included under database-scripts/check_query1.csv
+
+Test Query 2:
+
+    SELECT voucher, species, extraction_date, qubit_dna_ng_ul
+    FROM SpecimenData
+    JOIN EventData on SpecimenData.event_code = EventData.event_code
+    JOIN DNAExtractions on SpecimenData.lot_id= DNAExtractions.lot_id
+    WHERE qubit_dna_ng_ul > 100 AND Voucher != 'NA'
+    ORDER BY Qubit_DNA_ng_ul DESC
+
+To run the Python script:
+
+    python3 database-scripts/test_query1.py
+
+This query reports the voucher number, species, extraction date and concentration for samples that have a Qubit concentration greater than 100 ng/ul and have been depoited in a museum (if they have a voucher) The correct output for running this query is included under database-scripts/check_query2.csv
 
 ### Editing Entries
