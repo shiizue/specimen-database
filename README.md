@@ -12,28 +12,72 @@ In your desired directory, run the command:
 
     git clone https://github.com/shiizue/specimen-database.git
 
-## Building Initial Database
+## Building Initial Database (optional)
+A complete database file including data from the Panama 2021 dataset and La Palma 2023 dataset is included in the GitHub repo. The following two commands are included for transparency, or to rebuild the database file as needed.
+
 The database is structured according to the Panama2021 dataset (all files under Panama2021-Main-Dataset). To build the initial database, run the panama_clean_load.py script in the database-scripts folder:
 
     python3 database-scripts/panama_clean_load.py
 
 After running this script, you should have a file called "cunha_invertebrate_specimens.db" and see a total of rows reported as 33 rows in EventData, 1105 rows in SpecimenData, 782 rows in DNAExtractions, and 11 rows in GenomicLibraries. 
 
-## Accessing Database
-### Viewing Database
-There are various ways to view the database file (.db) file. We recommend using the VSQLite Explorer extension through VSCode. This extension is open access and allows the user to view each table, edit entries, and execute queries in a more intuitive way.
-
-Other options include:
-* Running SQL commands through Python scripts
-* DB Browser for SQLite https://sqlitebrowser.org/ (not tested as of 4/8/2026)
-### Adding Additional Datasets
 After building the initial database, you can add the data from the La Palma dataset (all files under LaPalma2023-Main-Dataset) by running the la_palma_clean_load.py script:
 
     python3 database-scripts/la_palma_clean_load.py
 
 There should be the following numbers reported for rows loaded into each table: 16 in EventData, 86 in SpecimenData, and 34 in DNAExtractions.
 
-**Note:** Once other datasets are obtained, we will include a generalized script for identifying missing column names as demonstrated in the output in the la_palma_clean_load.py script. 
+## Accessing Database
+### Viewing Database
+There are various ways to view the database file (.db) file. We recommend using the VSQLite Explorer extension through VSCode. This extension is open access and allows the user to view each table, edit entries, and execute queries and commands in a more intuitive way without using an intermediate Python script.
+
+Other options include:
+* Running SQL commands through Python scripts
+* DB Browser for SQLite https://sqlitebrowser.org/ (not tested as of 4/8/2026)
+
+### Adding Single Rows and Columns
+**Adding Columns**
+
+To add a column to an existing table in SQL, the basic command format is:
+   
+    ALTER TABLE table_name ADD COLUMN column_name column_definition
+Where the column_definition is the type of data being stored in that column. For example, TEXT or ID. By default, each row will get NULL assigned as the value for the new column; optional is adding a NOT NULL statement to specify a different default value.
+
+For example, to add a column to the SpecimenData table called "common name", which would be stored as text, with 'intervertebrate species' as the default value:
+
+    ALTER TABLE SpecimenData ADD COLUMN common_name TEXT NOT NULL DEFAULT 'invertebrate species'
+
+**Adding Rows**
+To add an additional entry (row) to an existing table, the basic command format is:
+
+    INSERT INTO table_name (columnA, columnB, columnC) VALUES (value1, value2, value3)
+
+Multiple rows can be added by separating the lists of values by commas. Each new entry must have a unique primary key to be added, and if using a foreign key, that foreign key must previously exist in the database.
+
+For example, to add the following two rows...
+
+    lot_id  genus   species
+    dummy_01    Mesonychoteuthis    hamiltoni
+    dummy_02    Haemopis    sanguisuga
+
+to the SpecimenData table:
+
+    INSERT INTO SpecimenData (lot_id, genus, species) VALUES ('dummy_01', 'Mesonychoteuthis', 'hamiltoni'), ('dummy_02', 'Haemopis', 'sanguisuga')
+
+### Editing an Individual Entry
+Many GUIs for SQL databases enable users to simply click and type in a cell that they want to change, including VSQLite Explorer through VSCode. 
+
+To edit an existing entry using SQL, the basic format is:
+
+    UPDATE table_name SET columnA= value1, columnB = value 2 WHERE condition
+
+For example, to update the dummy_01 row above to include the common_name and collected_by columns:
+
+    UPDATE SpecimenData SET common_name = "Colossal Squid", collected_by= "LU Wolf" WHERE lot_id == "dummy_01"
+
+
+### Adding Additional Datasets
+**Documentation for verify_and_load.py goes HERE**
 
 ### SQL Queries
 SQL queries allow the user to filter and report data from the database, accessing columns from multiple tables for a particular condition.
@@ -79,5 +123,3 @@ To run the Python script:
     python3 database-scripts/test_query1.py
 
 This query reports the voucher number, species, extraction date and concentration for samples that have a Qubit concentration greater than 100 ng/ul and have been depoited in a museum (if they have a voucher) The correct output for running this query is included under database-scripts/check_query2.csv
-
-### Editing Entries
