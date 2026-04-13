@@ -1,6 +1,6 @@
 # Invertebrate Species Database for the Cunha Lab
 
-This project's goal is to build a SQL database that combines invertebrate species sample data across multiple spreadsheets to make accessing this data easier. After running the included scripts, users will have a database file that can be accessed through Python scripts or various extensions as the user prefers.
+This project's goal is to build a SQL database that combines invertebrate specimen data across multiple spreadsheets to make accessing this data easier. After running the included scripts, users will have a database file that can be accessed through Python scripts or various extensions as the user prefers.
 
 ---
 ## Required Tools
@@ -169,7 +169,7 @@ This file is missing the required `extraction_id` column (the primary key for th
 
 ## Run the Example Queries
 
-To verify the database is working correctly, we have included two example queries to run and check with expected output. These queries can be ran through the VSQLite Explorer (see Accessing the Database below) query editor function, or through the test_query1.py and test_query2.py scripts in the database-scripts directory.
+To verify the database is working correctly, we have included two example queries to run and check with expected output. These queries can be run through the VSQLite Explorer (see Accessing the Database above) query editor function, or through the test_query1.py and test_query2.py scripts in the database-scripts directory.
 
 **Test Query 1:** counts the number of specimens per species, returning the top 10:
 
@@ -229,8 +229,8 @@ WHERE column_name <condition>
 ## Generating Blank CSV Files
 In the directory "template_CSVs", there are blank CSVs created for the database as it was structured on 4/12/2026. This is to minimize the amount of manual column name edits users will have to make to input new CSV files into the existing database.
 
-To generate new blank CSV files based on the currenty column names for each table, run the script "get_blank_csvs.py"
+To generate new blank CSV files based on the current column names for each table, run the script "get_blank_csvs.py"
 
-    python3 database-scripts/get_blank_csvs.py
+    python3 TEST-database-scripts/TEST-get_blank_csvs.py
 
 These CSV files can be opened as Excel files for easy use during data collection, and then exported as CSV files to add to database after data is recorded.
