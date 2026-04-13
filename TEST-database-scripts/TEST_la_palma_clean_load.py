@@ -13,7 +13,7 @@ import os
 
 # Define paths and load La Palma CSVs
 path = "LaPalma2023-Main-Dataset/"
-db_path = "skyescripts/TEST_cunha_invertebrate_specimens.db"
+db_path = "TEST-database-scripts/TEST_cunha_invertebrate_specimens.db"
 
 event_df = pd.read_csv(path + "LaPalma2023-EventData.csv")
 specimen_df = pd.read_csv(path + "LaPalma2023-SpecimenData.csv")
