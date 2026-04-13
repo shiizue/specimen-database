@@ -12,30 +12,43 @@ In your desired directory, run the command:
 
     git clone https://github.com/shiizue/specimen-database.git
 
-## Building Initial Database
-The database is structured according to the Panama2021 dataset (all files under Panama2021-Main-Dataset). To build the initial database, run the panama_clean_load.py script in the database-scripts folder:
+## Step 1: Building Initial Database with Panama2021
+The database is structured according to the Panama2021 dataset (all files under Panama2021-Main-Dataset). To build the initial database, run the `TEST_panama_clean_load.py` script in the **TEST-database-scripts** folder:
 
-    python3 database-scripts/panama_clean_load.py
+    python3 TEST-database-scripts/TEST_panama_clean_load.py
 
-After running this script, you should have a file called "cunha_invertebrate_specimens.db" and see a total of rows reported as 33 rows in EventData, 1105 rows in SpecimenData, 782 rows in DNAExtractions, and 11 rows in GenomicLibraries. 
+After running this script, you should have a file called `TEST_cunha_invertebrate_specimens.db` and see a total of rows reported as:
+- 33 rows in EventData
+- 1105 rows in SpecimenData
+- 782 rows in DNAExtractions
+- 11 rows in GenomicLibraries
 
-## Accessing Database
+It is important that the Panama script is loaded _before_ the La Palma script, as the latter depends on the former building the expected schema for the database.
+
+### Step 2: Adding LaPalma2023 Dataset
+After building the initial database, you can add the data from the La Palma dataset (all files under LaPalma2023-Main-Dataset) by running the `TEST_la_palma_clean_load.py` script:
+
+    python3 TEST-database-scripts/TEST_la_palma_clean_load.py
+
+There should be the following numbers reported for rows loaded into each table:
+
+- 16 in EventData
+- 86 in SpecimenData
+- 34 in DNAExtractions
+
+## Note: Accessing Database
 ### Viewing Database
-There are various ways to view the database file (.db) file. We recommend using the VSQLite Explorer extension through VSCode. This extension is open access and allows the user to view each table, edit entries, and execute queries in a more intuitive way.
+There are various ways to view the database file (.db) file. We recommend using the **VSQLite Explorer extension** through VSCode. This extension is open access and allows the user to view each table, edit entries, and execute queries in a more intuitive way.
 
 Other options include:
 * Running SQL commands through Python scripts
 * DB Browser for SQLite https://sqlitebrowser.org/ (not tested as of 4/8/2026)
-### Adding Additional Datasets
-After building the initial database, you can add the data from the La Palma dataset (all files under LaPalma2023-Main-Dataset) by running the la_palma_clean_load.py script:
 
-    python3 database-scripts/la_palma_clean_load.py
 
-There should be the following numbers reported for rows loaded into each table: 16 in EventData, 86 in SpecimenData, and 34 in DNAExtractions.
+## Step 3: Automatic Verification and Loading of New Datasets
 
-**Note:** Once other datasets are obtained, we will include a generalized script for identifying missing column names as demonstrated in the output in the la_palma_clean_load.py script. 
 
-### SQL Queries
+## Step 4: SQL Queries
 SQL queries allow the user to filter and report data from the database, accessing columns from multiple tables for a particular condition.
 
 **Writing SQL Queries**
