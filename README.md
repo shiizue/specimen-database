@@ -67,7 +67,112 @@ There should be the following numbers reported for rows loaded into each table:
 
 ---
 
-## Step 3: Test the Verification and Loading Script
+## Accessing the Database
+
+There are several ways to view and interact with the `.db` file directly:
+
+- **VSCode + SQLite Explorer extension** (recommended): This extension is open access and allows the user to view each table, edit entries, and execute queries and commands in a more intuitive way without using an intermediate Python script.
+- **DB Browser for SQLite**: a standalone desktop app available at [https://sqlitebrowser.org/](https://sqlitebrowser.org/) (NOT TESTED as of 4/13/26)
+- **Python scripts**: run SQL commands directly using `sqlite3` and `pandas`, as shown in the example query scripts
+
+---
+
+## Step 3: Run the Example Queries
+
+To verify the database is working correctly, we have included two example queries to run and check with expected output. These queries can be ran through the VSQLite Explorer (see Accessing the Database below) query editor function, or through the test_query1.py and test_query2.py scripts in the database-scripts directory.
+
+**Test Query 1:** counts the number of specimens per species, returning the top 10:
+
+```sql
+SELECT species, COUNT(*) AS specimen_count
+FROM SpecimenData
+GROUP BY species
+ORDER BY specimen_count DESC
+LIMIT 10
+```
+
+To run the Python script:
+
+    python3 TEST-database-scripts/test_query1.py
+
+The correct output for this query is saved in `TEST-database-scripts/check_query1.csv` for comparison.
+
+**Test Query 2**: returns voucher number, species, extraction date, and DNA concentration for samples with a Qubit concentration above 100 ng/µL that have been deposited in a museum:
+
+```sql
+SELECT voucher, species, extraction_date, qubit_dna_ng_ul
+FROM SpecimenData
+JOIN EventData on SpecimenData.event_code = EventData.event_code
+JOIN DNAExtractions on SpecimenData.lot_id= DNAExtractions.lot_id
+WHERE qubit_dna_ng_ul > 100 AND Voucher != 'NA'
+ORDER BY Qubit_DNA_ng_ul DESC
+```
+
+To run the Python script:
+
+    python3 TEST-database-scripts/test_query2.py
+
+The correct output for this query is saved in `TEST-database-scripts/check_query2.csv` for comparison.
+
+---
+
+## Writing SQL Queries
+
+This [GitHub](https://github.com/enochtangg/quick-SQL-cheatsheet) includes a detailed summary on various statements that can be used in SQL queries to filter, sort, and aggregate data. We have included some basic information on writing SQL queries below, but recommend SQL documentation, such as the above link, for more details.
+
+A basic SQL query uses the following structure:
+
+```sql
+SELECT column_name
+FROM table_name
+JOIN other_table ON table_name.shared_column = other_table.shared_column
+WHERE column_name <condition>
+```
+
+* **SELECT column_name**: select columns to be reported from the database as a whole
+* **FROM table_name**: selects the table that is initially accessed (for this database, the central table is SpecimenData)
+* **JOIN alt_table on table.common_col = alt_table.common_col**: joins tables along a common identifier for accessing information in a different table.
+* **WHERE column_name \<condition\>**: filters rows by if a value in the named column fits a particular condition. These statements can use any logical operator, including inequalities, AND, OR, NOT, BETWEEN and IS NULL.
+
+## Adding Single Rows and Columns
+**Adding Columns**
+To add a column to an existing table in SQL, the basic command format is:
+   
+    ALTER TABLE table_name ADD COLUMN column_name column_definition
+Where the column_definition is the type of data being stored in that column. For example, TEXT or ID. By default, each row will get NULL assigned as the value for the new column; optional is adding a NOT NULL statement to specify a different default value.
+
+For example, to add a column to the SpecimenData table called "common name", which would be stored as text, with 'intervertebrate species' as the default value:
+
+    ALTER TABLE SpecimenData ADD COLUMN common_name TEXT NOT NULL DEFAULT 'invertebrate species'
+
+**Adding Rows**
+To add an additional entry (row) to an existing table, the basic command format is:
+    INSERT INTO table_name (columnA, columnB, columnC) VALUES (value1, value2, value3)
+
+Multiple rows can be added by separating the lists of values by commas. Each new entry must have a unique primary key to be added, and if using a foreign key, that foreign key must previously exist in the database.
+
+For example, to add the following two rows...
+
+    lot_id  genus   species
+    dummy_01    Mesonychoteuthis    hamiltoni
+    dummy_02    Haemopis    sanguisuga
+
+to the SpecimenData table:
+
+    INSERT INTO SpecimenData (lot_id, genus, species) VALUES ('dummy_01', 'Mesonychoteuthis', 'hamiltoni'), ('dummy_02', 'Haemopis', 'sanguisuga')
+
+### Editing an Individual Entry
+Many GUIs for SQL databases enable users to simply click and type in a cell that they want to change, including VSQLite Explorer through VSCode. 
+
+To edit an existing entry using SQL, the basic format is:
+
+    UPDATE table_name SET columnA= value1, columnB = value 2 WHERE condition
+
+For example, to update the dummy_01 row above to include the common_name and collected_by columns:
+
+    UPDATE SpecimenData SET common_name = "Colossal Squid", collected_by= "LU Wolf" WHERE lot_id == "dummy_01"
+
+## Step 4: Test the Verification and Loading Script
 
 `TEST_verify_and_load.py` is an interactive script for safely adding new data to the existing database. It validates your CSV before inserting anything, and will clearly report any errors or warnings it finds. Use the provided test CSV files to see how it handles different scenarios.
 
@@ -136,70 +241,12 @@ This file is missing the required `extraction_id` column (the primary key for th
 *Expected result:* A **fatal error** is reported for the missing required column and no data is inserted.
 
 ---
+## Generating Blank CSV Files
+To generate blank CSV files based on the column names for each table... (adding this soon -Grace)
+In the directory "template_CSVs", there are blank CSVs created for the database as it was structured on 4/12/2026. This is to minimize the amount of manual column name edits users will have to make to input new CSV files into the existing database.
 
-## Step 4: Run the Example Queries
+To generate new blank CSV files based on the currenty column names for each table, run the script "get_blank_csvs.py"
 
-To verify the database is working correctly, we have included two example queries to run and check with expected output. These queries can be ran through the VSQLite Explorer (see Accessing the Database below) query editor function, or through the test_query1.py and test_query2.py scripts in the database-scripts directory.
+    python3 database-scripts/get_blank_csvs.py
 
-**Test Query 1:** counts the number of specimens per species, returning the top 10:
-
-```sql
-SELECT species, COUNT(*) AS specimen_count
-FROM SpecimenData
-GROUP BY species
-ORDER BY specimen_count DESC
-LIMIT 10
-```
-
-To run the Python script:
-
-    python3 TEST-database-scripts/test_query1.py
-
-The correct output for this query is saved in `TEST-database-scripts/check_query1.csv` for comparison.
-
-**Test Query 2**: returns voucher number, species, extraction date, and DNA concentration for samples with a Qubit concentration above 100 ng/µL that have been deposited in a museum:
-
-```sql
-SELECT voucher, species, extraction_date, qubit_dna_ng_ul
-FROM SpecimenData
-JOIN EventData on SpecimenData.event_code = EventData.event_code
-JOIN DNAExtractions on SpecimenData.lot_id= DNAExtractions.lot_id
-WHERE qubit_dna_ng_ul > 100 AND Voucher != 'NA'
-ORDER BY Qubit_DNA_ng_ul DESC
-```
-
-To run the Python script:
-
-    python3 TEST-database-scripts/test_query2.py
-
-The correct output for this query is saved in `TEST-database-scripts/check_query2.csv` for comparison.
-
----
-
-## Accessing the Database
-
-There are several ways to view and interact with the `.db` file directly:
-
-- **VSCode + SQLite Explorer extension** (recommended): lets you browse tables, edit entries, and execute queries through a GUI without writing Python
-- **DB Browser for SQLite**: a standalone desktop app available at [https://sqlitebrowser.org/](https://sqlitebrowser.org/) (NOT TESTED as of 4/13/26)
-- **Python scripts**: run SQL commands directly using `sqlite3` and `pandas`, as shown in the example query scripts
-
----
-
-## Writing SQL Queries
-
-This [GitHub](https://github.com/enochtangg/quick-SQL-cheatsheet) includes a detailed summary on various statements that can be used in SQL queries to filter, sort, and aggregate data. We have included some basic information on writing SQL queries below, but recommend SQL documentation, such as the above link, for more details.
-
-A basic SQL query uses the following structure:
-
-```sql
-SELECT column_name
-FROM table_name
-JOIN other_table ON table_name.shared_column = other_table.shared_column
-WHERE column_name <condition>
-```
-
-* **SELECT column_name**: select columns to be reported from the database as a whole
-* **FROM table_name**: selects the table that is initially accessed (for this database, the central table is SpecimenData)
-* **JOIN alt_table on table.common_col = alt_table.common_col**: joins tables along a common identifier for accessing information in a different table.
-* **WHERE column_name \<condition\>**: filters rows by if a value in the named column fits a particular condition. These statements can use any logical operator, including inequalities, AND, OR, NOT, BETWEEN and IS NULL. 
+These CSV files can be opened as Excel files for easy use during data collection, and then exported as CSV files to add to database after data is recorded.
