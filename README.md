@@ -54,8 +54,8 @@ There are various ways to view the database file (.db) file. We recommend using 
 For other scripts included for this project, any Python IDE is sufficient, but we recommend VScode. 
 
 Other storage options include:
-* **Remote Server**: allows multiple users to edit the same database file. When accessed through VSCode, the extension VSQLite Explorer is helpful for browsing and editing. In this case, we recommend using Python scripts ato run SQL commands directly using `sqlite3` and `pandas`, as shown in the example query scripts. However, this option is less user friendly to researchers unfamiliar to the command line and writing scripts.
-* **Remote Host**: (Laravel Cloud, Google Cloud, etc) allows multiple users to edit and access the database and is stored with a 3rd party service. This often requires a regular fee for storage, but may be an appropriate option depending on the number
+* **Remote Server**: allows multiple users to edit the same database file. When accessed through VSCode, the extension VSQLite Explorer is helpful for browsing and editing. In this case, we recommend using Python scripts to run SQL commands directly using `sqlite3` and `pandas`, as shown in the example query scripts. However, this option is less user friendly to researchers unfamiliar to the command line and writing scripts.
+* **Remote Host**: (Laravel Cloud, Google Cloud, etc) allows multiple users to edit and access the database and is stored with a 3rd party service. This often requires a regular fee for storage, but may be an appropriate option depending on the number of researchers needing regular access to the database.
 
 ### Adding Single Rows and Columns
 **Adding Columns**
