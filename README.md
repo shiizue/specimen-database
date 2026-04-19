@@ -62,44 +62,114 @@ Other storage options include:
 
 To add a column to an existing table in SQL, the basic command format is:
    
-      ALTER TABLE table_name ADD COLUMN column_name column_definition
+```sql
+ALTER TABLE table_name 
+ADD COLUMN column_name column_definition
+```
       
 Where the column_definition is the type of data being stored in that column. For example, TEXT or ID. By default, each row will get NULL assigned as the value for the new column; optional is adding a NOT NULL statement to specify a different default value.
 
 For example, to add a column to the SpecimenData table called "common name", which would be stored as text, with 'intervertebrate species' as the default value:
 
-    ALTER TABLE SpecimenData ADD COLUMN common_name TEXT NOT NULL DEFAULT 'invertebrate species'
+```sql
+ALTER TABLE SpecimenData 
+ADD COLUMN common_name TEXT 
+NOT NULL DEFAULT 'invertebrate species'
+```
+**Renaming Columns**
+To rename a column, the general format for the SQL command is...
+```sql
+ALTER TABLE table_name
+RENAME COLUMN old_name TO new_name
+```
+For example, to fix a typo that mispelled "suffix" as "sufix", the following command would alter the column name to the correct spelling.
+
+```sql
+ALTER TABLE LoanedSpecimens 
+RENAME COLUMN sufix TO suffix
+```
 
 **Adding Rows**
 To add an additional entry (row) to an existing table, the basic command format is:
 
-    INSERT INTO table_name (columnA, columnB, columnC) VALUES (value1, value2, value3)
+```sql
+INSERT INTO table_name (columnA, columnB, columnC) 
+VALUES (value1, value2, value3)
+```
 
 Multiple rows can be added by separating the lists of values by commas. Each new entry must have a unique primary key to be added, and if using a foreign key, that foreign key must previously exist in the database.
 
 For example, to add the following two rows...
 
-    lot_id  genus   species
-    dummy_01    Mesonychoteuthis    hamiltoni
-    dummy_02    Haemopis    sanguisuga
+| lot_id | genus |  species |
+|--------|-------|----------|
+dummy_01 | Mesonychoteuthis | hamiltoni |
+dummy_02 |  Haemopis  |  sanguisuga |
 
 to the SpecimenData table:
 
-    INSERT INTO SpecimenData (lot_id, genus, species) VALUES ('dummy_01', 'Mesonychoteuthis', 'hamiltoni'), ('dummy_02', 'Haemopis', 'sanguisuga')
-
+```sql
+INSERT INTO SpecimenData (lot_id, genus, species) 
+VALUES ('dummy_01', 'Mesonychoteuthis', 'hamiltoni'), ('dummy_02', 'Haemopis', 'sanguisuga')
+```
 ### Editing an Individual Entry
 Many GUIs for SQL databases enable users to simply click and type in a cell that they want to change, including VSQLite Explorer through VSCode. 
 
 To edit an existing entry using SQL, the basic format is:
 
-    UPDATE table_name SET columnA= value1, columnB = value 2 WHERE condition
+```sql
+UPDATE table_name 
+SET columnA= value1, columnB = value 2 
+WHERE condition
+```
 
 For example, to update the dummy_01 row above to include the common_name and collected_by columns:
 
-    UPDATE SpecimenData SET common_name = "Colossal Squid", collected_by= "LU Wolf" WHERE lot_id == "dummy_01"
+```sql
+UPDATE SpecimenData 
+SET common_name = "Colossal Squid", collected_by= "LU Wolf" 
+WHERE lot_id == "dummy_01"
+```
 
 ### Adding a New Table
-To add an additional table...
+To add an additional table, the basic format for the SQL command is...
+First, to create the new table:
+```sql
+CREATE TABLE IF NOT EXISTS table_name (
+    column_1 data_type PRIMARY KEY,
+    column_2 data_type,
+)
+```
+
+For example, if you wanted a table to keep track of specimens on loan from a museum with the following format and entries...
+
+| voucher | museum | genus | species | date_borrowed | returned_bool | date_returned
+|---------|--------|--------|--------|--------|--------|--------|
+|SNHM0001 | Smithsonian | Mesonychoteuthis | hamiltoni | 04-05-2026 | False | |
+| FMNH0002 | Field | Haemopis | sanguisuga | 04-15-2026 | True | 04-29-26 |
+
+In this case, the primary key (or unique identifier) would be the voucher number. Since these specimens are separate from the specimens collected by the Cunha lab, there are no foreign keys for this table.
+
+First, to create the new table:
+```sql
+CREATE TABLE IF NOT EXISTS LoanedSpecimens (
+    voucher TEXT PRIMARY KEY,
+    museum TEXT,
+    genus TEXT,
+    species TEXT,
+    date_borrowed TEXT,
+    returned_bool TEXT,
+    date_returned TEXT
+)
+```
+
+Then, after the table has been created, you can follow the instructions above for adding individual rows into an existing table. For example, to add the example entries shown above...
+```sql
+INSERT INTO LoanedSpecimens (voucher, museum, genus, species, date_borrowed, returned_bool, date_returned) 
+VALUES 
+('SNHM0001', 'Smithsonian', 'Mesonychoteuthis','hamiltoni', '04-05-2026','False', 'NULL'), 
+('FMNH0002', 'Field', 'Haemopis', 'sanguisuga','04-15-2026','True', '04-29-26');
+```
 
 ## Adding Additional Datasets
 `TEST_verify_and_load.py` is an interactive script for safely adding new data to the existing database. It validates your CSV before inserting anything, and will clearly report any errors or warnings it finds. Use the provided test CSV files to see how it handles different scenarios.
