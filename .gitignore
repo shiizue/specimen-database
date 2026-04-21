@@ -1,1 +1,5 @@
 .venv/
+gracescripts/
+skyescripts/
+sofiscripts/
+backups/
