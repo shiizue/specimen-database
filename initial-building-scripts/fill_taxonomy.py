@@ -8,7 +8,7 @@ import urllib.parse
 # STEP 0: CONFIGURATION
 # ===========================================================================
 
-db_path = "database-scripts/cunha_invertebrate_specimens.db"
+db_path = "initial-building-scripts/cunha_invertebrate_specimens.db"
 
 # Create a dictionary to map the columns to the keys that GBIF will return
 
@@ -64,6 +64,12 @@ def fetch_gbif_taxonomy(genus, species):
         "none",
         "",
     )
+    # If species starts with the genus name, strip it
+    # e.g. Vasula + Vasula melones -> Vasula melones
+    if not species_is_unknown and str(species).strip().lower().startswith(
+        str(genus).strip().lower()
+    ):
+        search_name = str(species).strip()
 
     if species_is_unknown:
         search_name = str(genus).strip()
@@ -82,6 +88,23 @@ def fetch_gbif_taxonomy(genus, species):
     except Exception as e:
         print(f"    [API ERROR] Could not reach GBIF for search '{search_name}': {e}")
         return None
+
+    match_type = data.get("matchType", "NONE")
+    confidence = data.get("confidence", 0)
+
+    if match_type == "NONE" or confidence < CONFIDENCE_THRESHOLD:
+        return None
+
+    return {
+        "phylum": data.get("phylum"),
+        "class": data.get("class"),
+        "subclass": data.get("subclass"),
+        "family": data.get("family"),
+        "order": data.get("order"),
+        "match_type": match_type,
+        "confidence": confidence,
+        "matched_name": data.get("species") or data.get("genus"),
+    }
 
 
 # ===========================================================================
@@ -196,22 +219,22 @@ def fill_taxonomy(conn):
     else:
         print("\n  All species matched successfully!")
 
- 
+
 if __name__ == "__main__":
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON;")
- 
-    print("="*60)
+
+    print("=" * 60)
     print("  Performing GBIF Taxonomy Filling")
-    print("="*60)
-    
+    print("=" * 60)
+
     # Make sure all taxonomy columns exist
     add_missing_cols(cursor)
     conn.commit()
- 
+
     # Perform look up adn fill functions
     fill_taxonomy(conn)
- 
+
     conn.close()
     print("\nFinished Taxonomy Filling.\n")

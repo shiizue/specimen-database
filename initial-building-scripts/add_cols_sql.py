@@ -1,7 +1,7 @@
 import sqlite3
 
 #connecting to database
-conn = sqlite3.connect("database-scripts/cunha_invertebrate_specimens.db")
+conn = sqlite3.connect("initial-building-scripts/cunha_invertebrate_specimens.db")
 cursor = conn.cursor()
 
 #running ALTER TABLE statements
@@ -24,3 +24,4 @@ ALTER TABLE DNAExtractions ADD COLUMN dnalocation_box TEXT;
 #committing changes
 conn.commit()
 conn.close()
+print("\nFinished adding new columns.\n")
