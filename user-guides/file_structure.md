@@ -3,6 +3,7 @@
 - get_blank_csvs.py Generates blank CSV files from the live database schema to use as templates (output to template_CSVs folder)
 - verify_and_load.py Validates a given CSV file for expected data from current database schema before automatically loading it into the database
 ## initial-building-scripts
+- cunha_invertebrate_specimens.db Main database file
 - panama_clean_load.py Builds initial database file using Panama data
 - la_palma_clean_load.py Adds on La Palma data to the database
 - add_cols_sql.py Adds additional columns as requested
