@@ -52,6 +52,8 @@ specimen-database/
 │   └── check_query2.csv                        # Expected output for test_query2
 │
 └── user-guides/                                # Documentation for database users
+    ├── SupabaseAdminGuide.pdf
+    ├── SupabaseUserGuide.pdf
     ├── advanced_user_guide.pdf
     ├── beginner_user_guide.pdf
     └── How_to_use_DB_Browser.pdf
@@ -111,9 +113,17 @@ Detailed notes for rebuilding the database file from scratch using this pipeline
 
 # Accessing the Database
 
-### Viewing Database
+There are various ways to view the database file (.db) file. We recommend using **DB Browser for SQLite** or **Supabase**. 
 
-There are various ways to view the database file (.db) file. We recommend using **DB Browser for SQLite**. This is a free application that allows a user to upload a .db file to browse, query, and edit it. One limitation of this GUI is that it is not a shared file, so only one user would be able to access it at a time. Users are suggested to coordinate a GitHub page to pull and push database edits, which ensures the integrity of the database if a user makes a mistake. Our user guide for installing and setting up our database file with DB Browser is included in `user-guides/How_to_use_DB_Browser.pdf`
+## DB Broswer
+
+DB Browser is a free application that allows a user to upload a .db file to browse, query, and edit it. One limitation of this GUI is that it is not a shared file, so only one user would be able to access it at a time. Users are suggested to coordinate a GitHub page to pull and push database edits, which ensures the integrity of the database if a user makes a mistake. Our user guide for installing and setting up our database file with DB Browser is included in `user-guides/How_to_use_DB_Browser.pdf`
+
+## Supabase
+
+(Describe and include link) (Also include that guides can be found in `user-guides/SupabaseAdminGuide.pdf` and `user-guides\SupabaseUserGuide.pdf`)
+
+### Other ways to view the database
 
 For other scripts included for this project, any Python IDE is sufficient, but we recommend VScode.
 
